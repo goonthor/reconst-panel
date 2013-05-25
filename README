@@ -1,60 +1,62 @@
 WSN Signal Reconstruction README
 
+
 Notes:
-Samples and data are used interchangeably and refer to the information that you have on-hand.
-The dimension of the data is the number of independent variables.  It can range from one (corresponding to a single spatial dimension OR time) to four (corresponding to all three spatial dimensions AND time).
+- Samples and data are used interchangeably and refer to the information that you have on-hand.
+- The dimension of the data is the number of independent variables.  It can range from one (corresponding to a single spatial dimension OR time) to four (corresponding to all three spatial dimensions AND time).
+
 
 1. Data Format
-First, be sure that your data is a function of space and/or time. Although the program will perform similarly for the most part, there are a few features built around this assumption.  
-The program requires a specific format for the data and unknown points. This format consists of three “.mat” files containing saved matlab variables. 
-Two files are used to describe the samples.  The first file (the points file) contains a m by n matrix where m is the number of samples and n is the dimension of the data.  Note that the values of the samples are not included in this matrix, only the locations and/or times of the samples.  The matrix name must be “points”.
-The second file (values file) contains the values corresponding to the points described in the points file/matrix. It consists of either a m by 1 vector or a m by r matrix. In the first case, the data are scalar because only a single value is associated with the m points. In the second, the data are vectors and r is the dimension of the vectors; r can either be n or n-1 and not greater than 3. If r is n-1, time must be an independent variable. Note that there must be a one-to-one correspondence with the rows of this vector/matrix and those of the points matrix. The matrix name must be “values”.
-The third file describes the unknown points for which there might not be values--the points-to-guess file.  There are two possible formats for this file which affect the visualization of the resulting data.
-The first format consists of a p by n matrix where p is the number of unknown points.  In this format, the data is assumed to be irregularly gridded.  Certain visualization functions do not work on this type of data. If the points you want reconstructed are on a regular grid, use the second format.  The matrix must be named “newpoints”.
-The second format consists of one to four vectors named “x1”, “x2”, “x3”, and “x4”.  There should be n vectors. These vectors should be constructed assuming the unknown points will be described by meshgrid(x1, … , xn).
-If your data is a function of time, be sure that the sample times are in the nth column of the points file/matrix.  Similarly, the unknown times should be the nth column of the newpoints matrix or described by the xn vector.
-
+	-  First, be sure that your data is a function of space and/or time. Although the program will perform similarly for the most part, there are a few features built around this assumption. 
+	-  The program requires a specific format for the data and unknown points. This format consists of three “.mat” files containing saved matlab variables. 
+		-- Two files are used to describe the samples.  The first file (the points file) contains a m by n matrix where m is the number of samples and n is the dimension of the data.  Note that the values of the samples are not included in this matrix, only the locations and/or times of the samples.  The matrix name must be “points”.
+		-- The second file (values file) contains the values corresponding to the points described in the points file/matrix. It consists of either a m by 1 vector or a m by r matrix. In the first case, the data are scalar because only a single value is associated with the m points. In the second, the data are vectors and r is the dimension of the vectors; r can either be n or n-1 and not greater than 3. If r is n-1, time must be an independent variable. Note that there must be a one-to-one correspondence with the rows of this vector/matrix and those of the points matrix. The matrix name must be “values”.
+		-- The third file describes the unknown points for which there might not be values--the points-to-guess file.  There are two possible formats for this file which affect the visualization of the resulting data.
+			--- The first format consists of a p by n matrix where p is the number of unknown points.  In this format, the data is assumed to be irregularly gridded.  Certain visualization functions do not work on this type of data. If the points you want reconstructed are on a regular grid, use the second format.  The matrix must be named “newpoints”.
+			--- The second format consists of one to four vectors named “x1”, “x2”, “x3”, and “x4”.  There should be n vectors. These vectors should be constructed assuming the unknown points will be described by meshgrid(x1, … , xn).
+	- If your data is a function of time, be sure that the sample times are in the nth column of the points file/matrix.  Similarly, the unknown times should be the nth column of the newpoints matrix or described by the xn vector.
 
 2. Slice Planes and Keograms
-These are alternatives to the points-to-guess file. Slice planes can be used when the data is 4-D.  Keograms can be used when the data is 3-D or 4-D.
-Slice planes show a single, animated plane of reconstructed data which is specified with a point in the plane and the plane’s normal vector.
-Keograms are a 2-D plot that shows reconstructed data along a line segment over a period of time.  One axis is distance along the segment, the other is time.
-If the ‘Save Results’ button is used with either method, two files are generated: one of the points and one of the values.
+	- These are alternatives to the points-to-guess file. Slice planes can be used when the data is 4-D.  Keograms can be used when the data is 3-D or 4-D.
+	- Slice planes show a single, animated plane of reconstructed data which is specified with a point in the plane and the plane’s normal vector.
+	- Keograms are a 2-D plot that shows reconstructed data along a line segment over a period of time.  One axis is distance along the segment, the other is time.
+	- If the ‘Save Results’ button is used with either method, two files are generated: one of the points and one of the values.
+
 
 3. Time
-The temporal dimension is treated exactly like another spatial dimension except when the user selects certain options in the UI.  If the user selects an animation option or performs a windowed time analysis, then the program assumes that the last dimension of the data is time.
-Animation only affects the visualization of the data, but a windowed analysis affects the model itself.
+	- The temporal dimension is treated exactly like another spatial dimension except when the user selects certain options in the UI.  If the user selects an animation option or performs a windowed time analysis, then the program assumes that the last dimension of the data is time.
+	- Animation only affects the visualization of the data, but a windowed analysis affects the model itself.
+
 
 4. Settings
-Feature size
-This option has a large effect on the model of the data, rather than the visualization or animation. The model is built from gaussian radial basis functions and the full-width, half-maximums of these functions are specified using the feature size.
-For example, if the data are 2-D and scalar--such as elevation over a certain plot of land--the x1 feature size controls the length of ridges in the x direction.  The x2 feature size controls the length of ridges in the y direction.  Increasing the feature size, increases the length.  
-Animation
-Either ‘Animate’ or ‘Side-by-side’ can be selected when the data has more than one dimension.
-2-D: Each frame is line drawn on an x-y plane.
-3-D: Each frame is a 2-D surface.
-4-D: Each frame is a volume visualized with points or slice planes.
-‘Animate’ will automatically advance the frames at a rate specified in the ‘FPS’ box.
-‘Side-by-side’ shows four frames simultaneously and allows the user to advance forward and back using the arrow buttons.
-Model Choice
-This option is primarily designed to show the difference between Matlab’s TriScatteredInterp routine and the custom SVR method.
-Many options are not available using TriScat, such as feature size.
-
-Coordinate Systems
-Using different coordinate systems can have a large effect on the model.  For instance, if the data are 2-D and scalar--such as elevation over a certain plot of land--the x1 feature size normally controls the length of ridges in the x direction.  However, if the data samples are converted to polar coordinates before use in this program, x1 will control the length of ridges in the radial direction.
-If the user suspects that the underlying truth has some basis, the samples should be provided in that basis.  They can specify the sample coordinate system using the first coordinate system panel--Sample Coordinate System.  This panel is not an option, but a way to designate the coordinate system of the provided samples.
-The second panel--Display Coordinate System--is an option that controls the axis labels.  Cartesian will use the standard x-y-z visualization.  Polar will use r-theta-h as the axis labels. And Spherical will use r-theta-phi.
-Cross Validation
-This option does not affect the model or the visualization, but analyzes how “good” the model is by training and testing on different subsets of the samples.
-Windowed analysis
-This option affects the model and is most useful when a single dimension has  a much larger relative range--usually time.
-Windowed analysis uses samples from times just before and after the time in question to produce a mini-model for that time.  The data is reconstructed for that time and the model is discarded.
-Arrow size changes the size of arrows in the visualization.
-The magnitude of the vector field can also be displayed.
-Save/Open Results
-The reconstructed values can be saved with this button.  The file is saved as a “.mat” in the given folder with a timestamp.
-Opening previous results (along with the corresponding points, values, and points-to-guess file) allows one to visualize the results without having to re-run the analysis.  If any options affecting the model are changed, the analysis will be re-run.
-Show Samples
-This overlays the samples on the reconstructed points.
-Color scale
-This option affects plots that use color by specifying the range of the colors.
+	- Feature size
+		-- This option has a large effect on the model of the data, rather than the visualization or animation. The model is built from gaussian radial basis functions and the full-width, half-maximums of these functions are specified using the feature size.
+		-- For example, if the data are 2-D and scalar--such as elevation over a certain plot of land--the x1 feature size controls the length of ridges in the x direction.  The x2 feature size controls the length of ridges in the y direction.  Increasing the feature size, increases the length.  
+	- Animation
+		-- Either ‘Animate’ or ‘Side-by-side’ can be selected when the data has more than one dimension.
+		-- 2-D: Each frame is line drawn on an x-y plane.
+		-- 3-D: Each frame is a 2-D surface.
+		-- 4-D: Each frame is a volume visualized with points or slice planes.
+		-- ‘Animate’ will automatically advance the frames at a rate specified in the ‘FPS’ box.
+		-- ‘Side-by-side’ shows four frames simultaneously and allows the user to advance forward and back using the arrow buttons.
+	- Model Choice
+		-- This option is primarily designed to show the difference between Matlab’s TriScatteredInterp routine and the custom SVR method.
+		-- Many options are not available using TriScat, such as feature size.
+	- Coordinate Systems
+		-- Using different coordinate systems can have a large effect on the model.  For instance, if the data are 2-D and scalar--such as elevation over a certain plot of land--the x1 feature size normally controls the length of ridges in the x direction.  However, if the data samples are converted to polar coordinates before use in this program, x1 will control the length of ridges in the radial direction.
+		-- If the user suspects that the underlying truth has some basis, the samples should be provided in that basis.  They can specify the sample coordinate system using the first coordinate system panel--Sample Coordinate System.  This panel is not an option, but a way to designate the coordinate system of the provided samples.
+		-- The second panel--Display Coordinate System--is an option that controls the axis labels.  Cartesian will use the standard x-y-z visualization.  Polar will use r-theta-h as the axis labels. And Spherical will use r-theta-phi.
+	- Cross Validation
+		-- This option does not affect the model or the visualization, but analyzes how “good” the model is by training and testing on different subsets of the samples.
+	- Windowed analysis
+		-- This option affects the model and is most useful when a single dimension has  a much larger relative range--usually time.
+		-- Windowed analysis uses samples from times just before and after the time in question to produce a mini-model for that time.  The data is reconstructed for that time and the model is discarded.
+	- Arrow size changes the size of arrows in the visualization.
+	- The magnitude of the vector field can also be displayed.
+	- Save/Open Results
+		-- The reconstructed values can be saved with this button.  The file is saved as a “.mat” in the given folder with a timestamp.
+		-- Opening previous results (along with the corresponding points, values, and points-to-guess file) allows one to visualize the results without having to re-run the analysis.  If any options affecting the model are changed, the analysis will be re-run.
+	- Show Samples
+		-- This overlays the samples on the reconstructed points.
+	- Color scale
+		-- This option affects plots that use color by specifying the range of the colors.
