@@ -221,7 +221,7 @@ elseif isstruct(newpoints)
             else
                 % Reshape the guesses vector so meesh visualizations can be
                 % used, i.e. surf.
-                g = reshape(guesses,size(sX1));
+                g = reshape(guesses,size(X1));
                 
                 % Animation
                 if isAnimated
