@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before reconst_panel is made visible.
 function reconst_panel_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -52,35 +51,61 @@ function reconst_panel_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to reconst_panel (see VARARGIN)
 
-path(path, './toolbox_diffc/toolbox_diffc');
-path(path, './toolbox_diffc/toolbox_diffc/toolbox');
+% path(path, './toolbox_diffc/toolbox_diffc');
+% path(path, './toolbox_diffc/toolbox_diffc/toolbox');
 % path('./libsvm', path);
 path('./libsvm-weights-3.17/matlab',path);
 
 % Initialize variables
+% Used for frame-by-frame to indicate which set of 4 frames we are on.
 handles.currpanel = 1;
+% Flag indicating analysis needs to be run again as a result of changes
+% user has made in the GUI.
 handles.rebuildmodel = 1;
+% We don't need to rebuild the model, but the new points have changed so we
+% should query the model with the new set of points.
 handles.needtoquery = 1;
+% Sample points
 handles.pnts = -1;
+% Sample values
 handles.vals = -1;
+% New points
 handles.newpnts = -1;
+% New values
 handles.guesses = -1;
+% Number of dimensions in points.
 handles.pntdim = -1;
+% Number of samples
 handles.numpts = -1;
+% Number of dimenions in values
 handles.valdim = -1;
+% Number of values (should equal numpts)
 handles.numvals = -1;
+% Dimensionality of new points (should equal pntdim)
 handles.newpntsdim = -1;
+% Is the data valid?
 handles.valid = 0;
+% Flag for mesh data
 handles.ismesh = 0;
+% Points file name
 handles.filename = 'No file selected';
+% Integer for display coordinate system
 handles.dispID = 1;
+% Integer for sample coordinate system
 handles.sampID = 1;
+% Color scale data
 handles.colorbounds = [-1 1];
+% Flag for keogram new points
 handles.isKeo = 0;
+% Flag for slice plane new points
 handles.isSlice = 0;
+% SVR model
 handles.model = 0;
+% Parameter accompanying SVR model
 handles.modelfactor = 0;
+% Vector of weights
 handles.weights = 0;
+% Flag indicating user specified weights
 handles.hasweights = 0;
 
 % Choose default command line output for reconst_panel
@@ -199,14 +224,6 @@ if handles.valid && (handles.rebuildmodel || handles.needstoquery)
         [handles.guesses fs handles.model handles.modelfactor] = ...
             performAnalysis(handles.pnts,handles.vals,pntmatrix,...
             handles.weights, handles.model, options);
-        
-        % Vector field invariants only work on mesh, check if any are
-        % active.
-%         if get(handles.incompradiobutton,'value')
-%             handles.guesses = computeVectorInvariant(handles.guesses,1,numel(handles.newpnts.x2),numel(handles.newpnts.x1));
-%         elseif get(handles.irrotradiobutton,'value')
-%             handles.guesses = computeVectorInvariant(handles.guesses,0,numel(handles.newpnts.x2),numel(handles.newpnts.x1));
-%         end
     % 4.
     else
         [handles.guesses fs handles.model handles.modelfactor] = ...
@@ -277,107 +294,6 @@ else
 end
 
 guidata(hObject,handles);
-
-% Update Display helper functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function fsize = extractFeatureSize(handles)                              % 
-fsizex1 = str2double(get(handles.featuresizex1,'String'));                %
-fsizex2 = str2double(get(handles.featuresizex2,'String'));                %
-fsizex3 = str2double(get(handles.featuresizex3,'String'));                %
-fsizex4 = str2double(get(handles.featuresizex4,'String'));                %
-fsize = [fsizex1 fsizex2 fsizex3 fsizex4];                                %
-fsize(isnan(fsize))=[];
-if numel(fsize) ~= handles.pntdim
-    fsize=zeros(handles.pntdim,1);
-end
-%
-                                                                          %
-function pntmatrix = getMeshNewPoints(pntdim, newpnts)                    %
-pntmatrix = newpnts.x1;                                                   %
-if pntdim == 2                                                            %
-    [X1 X2] = meshgrid(newpnts.x1, newpnts.x2);
-    pntmatrix = [X1(:) X2(:)];
-elseif pntdim == 3
-    [X1 X2 X3] = meshgrid(newpnts.x1, newpnts.x2, newpnts.x3);
-    pntmatrix = [X1(:) X2(:) X3(:)];
-elseif pntdim == 4
-    [X1 X2 X3 X4] = ndgrid(newpnts.x1,newpnts.x2,newpnts.x3,newpnts.x4);
-    X1 = permute(X1,[2 1 3 4]);
-    X2 = permute(X2,[2 1 3 4]);
-    X3 = permute(X3,[2 1 3 4]);
-    X4 = permute(X4,[2 1 3 4]);
-    pntmatrix = [X1(:) X2(:) X3(:) X4(:)];
-end
-
-% function res = computeVectorInvariant(guesses, incomp, dim1, dim2)
-% gs1 = reshape(guesses(:,1),dim1, dim2);
-% gs2 = reshape(guesses(:,2),dim1, dim2);
-% gs(:,:,1) = gs1;
-% gs(:,:,2) = gs2;
-% options.bound = 'per';
-% [gs_nocurl gs_nodiv] = compute_hodge_decompositon(gs,options);
-% if incomp
-%     gs1 = gs_nodiv(:,:,1);
-%     gs2 = gs_nodiv(:,:,2);
-%     res = [gs1(:) gs2(:)];
-% else
-%     gs1 = gs_nocurl(:,:,1);                                               %
-%     gs2 = gs_nocurl(:,:,2);                                               %
-%     res = [gs1(:) gs2(:)];                                                %
-% end                                                                       %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [guesses fs modelOut modelfactor] = performAnalysis(pnts, vals, newpnts, weights, modelIn, options)
-disp('Starting analysis...')
-tic
-fs = options.fsize;
-modelfactor = options.modelfactor;
-modelOut = modelIn;
-if options.flag==1
-    if options.isWin
-        [guesses fs] = svr_window(pnts,vals,newpnts,weights,options);
-%     elseif options.split > 2
-%         [guesses fs] = svr3(pnts,vals,newpnts,options);
-    else
-        [guesses fs modelOut modelfactor] = svr(pnts,vals,newpnts,weights,modelIn,options);
-    end
-else
-    guesses = runTriScat(pnts, vals, newpnts);
-end
-t=toc;
-disp(['Analysis completed in ' num2str(t) ' seconds.']);
-
-function guesses = runTriScat(pnts, vals, newpnts)
-if size(pnts,2) == 2
-        switch size(vals,2)
-            case 1
-                F = TriScatteredInterp(pnts(:,1), pnts(:,2), vals);
-                guesses = F(newpnts(:,1),newpnts(:,2));
-            case 2
-                F1 = TriScatteredInterp(pnts(:,1), pnts(:,2), vals(:,1));
-                F2 = TriScatteredInterp(pnts(:,1), pnts(:,2), vals(:,2));
-                guesses(:,1) = F1(newpnts(:,1),newpnts(:,2));
-                guesses(:,2) = F2(newpnts(:,1),newpnts(:,2));
-            otherwise
-                disp('Bad data format.');
-        end
-elseif size(pnts,2) == 3
-        switch size(vals,2)
-            case 1
-                F = TriScatteredInterp(pnts(:,1), pnts(:,2), pnts(:,3), vals);
-                guesses = F(newpnts(:,1),newpnts(:,2),newpnts(:,3));
-            case 3
-                F1 = TriScatteredInterp(pnts(:,1), pnts(:,2), pnts(:,3), vals(:,1));
-                F2 = TriScatteredInterp(pnts(:,1), pnts(:,2), pnts(:,3), vals(:,2));
-                F3 = TriScatteredInterp(pnts(:,1), pnts(:,2), pnts(:,3), vals(:,3));
-                guesses(:,1) = F1(newpnts(:,1),newpnts(:,2),newpnts(:,3));
-                guesses(:,2) = F2(newpnts(:,1),newpnts(:,2),newpnts(:,3));
-                guesses(:,3) = F3(newpnts(:,1),newpnts(:,2),newpnts(:,3));
-            otherwise
-                disp('Bad data format.');
-        end
-else
-    disp('Cannot run TriScat in 4D.')
-end
 
 function openptsbutton_Callback(hObject, eventdata, handles)
 set(hObject, 'String', 'Opening...');
@@ -576,7 +492,6 @@ handles.rebuildmodel = 1;
 
 guidata(hObject,handles)
 
-
 function backbutton_Callback(hObject, eventdata, handles)
 if handles.currpanel > 1
     handles.currpanel = handles.currpanel - 1;
@@ -624,7 +539,6 @@ else
 end
 
 guidata(hObject,handles);
-
 
 function changealledit_Callback(hObject, eventdata, handles)
 disp('Changing all the feature sizes.')
@@ -762,7 +676,6 @@ else
 end
 guidata(hObject,handles);
 
-
 function slicepushbutton_Callback(hObject, eventdata, handles)
 if handles.valdim == 1
     handles.needstoquery = 1;
@@ -792,76 +705,6 @@ else
     disp('Cannot show slice with vector data.');
 end
 guidata(hObject,handles);
-
-% input should not be handles.
-function newpoints = generateKeogramPoints(handles)
-x1 = str2double(get(handles.editx1, 'String'));
-y1 = str2double(get(handles.edity1, 'String'));
-z1 = str2double(get(handles.editz1, 'String'));
-
-x2 = str2double(get(handles.editx2, 'String'));
-y2 = str2double(get(handles.edity2, 'String'));
-z2 = str2double(get(handles.editz2, 'String'));
-
-mint = min(handles.pnts(:,handles.pntdim));
-maxt = max(handles.pnts(:,handles.pntdim));
-
-N = 500; % *** ATTN: MAGIC # 500 ***
-
-t = linspace(mint,maxt,N);
-t = repmat(t,N,1);
-t = t(:);
-
-if handles.pntdim == 3
-    [x y] = getNPointsFromSegment2D(x1,y1,x2,y2,N);
-    x = repmat(x,N,1);
-    y = repmat(y,N,1);
-    newpoints = [x y t];
-else
-    [x y z] = getNPointsFromSegment3D(x1,y1,z1,x2,y2,z2,N);
-    x = repmat(x,N,1);
-    y = repmat(y,N,1);
-    z = repmat(z,N,1);
-    newpoints = [x y z t];
-end
-
-function [x y z] = getNPointsFromSegment3D(x1,y1,z1,x2,y2,z2,N)
-t = linspace(0,1,N)';
-x = x1+(x2-x1)*t;
-y = y1+(y2-y1)*t;
-z = z1+(z2-z1)*t;
-
-function [x y] = getNPointsFromSegment2D(x1,y1,x2,y2,N)
-t = linspace(0,1,N)';
-x = x1+(x2-x1)*t;
-y = y1+(y2-y1)*t;
-
-function [newpoints flag] = generateSlicePoints(handles)
-x1 = str2double(get(handles.editx1, 'String'));
-y1 = str2double(get(handles.edity1, 'String'));
-z1 = str2double(get(handles.editz1, 'String'));
-
-x2 = str2double(get(handles.editx2, 'String'));
-y2 = str2double(get(handles.edity2, 'String'));
-z2 = str2double(get(handles.editz2, 'String'));
-
-mint = min(handles.pnts(:,handles.pntdim));
-maxt = max(handles.pnts(:,handles.pntdim));
-
-Nt = 30;
-Ns = 50;
-t = linspace(mint,maxt,Nt);
-% need to increase Nt?
-
-t = repmat(t,Ns^2,1);
-t = t(:);
-bounds = [min(handles.pnts(:,1)) max(handles.pnts(:,1)) min(handles.pnts(:,2)) max(handles.pnts(:,2)) min(handles.pnts(:,3)) max(handles.pnts(:,3))];
-[x y z flag] = getPlanePoints([x1 y1 z1], [x2 y2 z2], bounds, Ns);
-x = repmat(x,Nt,1);
-y = repmat(y,Nt,1);
-z = repmat(z,Nt,1);
-
-newpoints = [x y z t];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The following functions are for GUI elements which, if edited, 
@@ -893,7 +736,6 @@ guidata(hObject,handles);
 function vectorpanel_SelectionChangeFcn(hObject, eventdata, handles)
 handles.rebuildmodel = 1;
 guidata(hObject,handles);
-
 function editx1_Callback(hObject, eventdata, handles)
 handles.needstoquery = 1;
 guidata(hObject,handles);

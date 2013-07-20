@@ -1,0 +1,34 @@
+This document describes the implementation of the Signal Reconstruction Panel (SRP).
+
+1. Flow Diagram - There are 4 main steps to the flow of the SRP. Beneath each step, key subroutines are listed.  This way, the reader knows which functions belong to which process.  See each individual file for more details.
+    a) First, there is a global variable called "handles" which is part of MATLAB's GUI implementation.  "handles" includes the information about every component of the GUI (radio buttons, push buttons, text boxes, etc.) and their current state (is the radio button selected?, what is the text?, etc).  Handles can also be used to pass custom global data between GUI components.  For example, a user opens the "Points File" and the points data is stored in handles.  This data can be used to run SVR when "Update Display" is pressed.
+    b) Once the user has specified all the required information and parameters for their analysis, they press the "Update Display" button.  This function makes sure there are no obvious errors in the data and passes it on to performAnalysis.m.  If the new points are a mesh, slice plane, or keogram, they are generated here.
+    c) Perform analysis has three major branches- svr.m, runTriScat.m, and svr_window.m.  One of these is performed, resulting in the list of new values.
+    d) Finally, the samples and reconstructed data are passed to the visualization routine.
+
+*********************************************************************************************************************
+*	/-----------------\       /-------------------------------\       /-----------------\	    /-----------\   *
+*      | "handles" updated | --> | "Update Display" button pressed | --> | performAnalysis.m | --> | visualize.m |  *
+*	\-----------------/	  \-------------------------------/       \-----------------/       \-----------/   *
+*	 ~ reconst_panel.m	   ~ reconst_panel.m		      	   ~ runTriScat.m	    ~ viewPlane.m   *
+*				   ~ extractFeatureSize.m		   ~ svr.m		    ~ easyslice.m   *
+*				   ~ generateSlicePoints.m		   ~ svr_window.m	    ~ easycone.m    *
+*				   ~ generateKeogramPoints.m	           ~ scaledomain.m			    *
+*				   ~ getMeshPoints.m		           ~ normalize.m			    *
+*								           ~ denormalize.m			    *
+*********************************************************************************************************************
+
+2. reconst_panel.m
+	This file contains the GUI implementation.  The main function is the titular "reconst_panel" which launches the GUI. All of the other important functions are the "callbacks" for the GUI components.  These run when a user interacts with the respective GUI element. Most of the functions update the global "handles" structure. As stated earlier "handles" contains references to each GUI component.  In addition, it contains the following custom fields:
+* pnts - The sample points.
+* vals - The sample values
+* newpnts - The new points which can be a mesh, slice plane, keogram, or scattered array.
+* guesses - The values at the new points.
+* currpanel - Index denoting the current 4 frames display when frame-by-frame is selected.
+* sampID - Integer referring to the sample coordinate system.
+* dispID - Integer referring to the display coordinate system.
+	
+Handles contains more custom fields than those listed here.
+
+3. visualize.m
+	This file controls the visualization.  There are four main branches of code here: keogram, slice plane, mesh data, and scattered data.  For mesh data and scattered data, there are additional branches for dimensionality, animations, and vector data.  Please refer to the comments for more info.
